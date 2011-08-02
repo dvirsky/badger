@@ -1,0 +1,7 @@
+*.conf
+*.pyc
+*.pyo
+*.jpg
+.project
+.pydevproject
+
