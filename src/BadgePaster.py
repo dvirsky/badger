@@ -26,19 +26,10 @@ class BadgePaster(object):
     def loadImage(self):
         
         
-        ufp = urllib2.urlopen(self.imageURL)
-        ofp = open('/tmp/%s' % hash(self.imageURL), 'w+')
-        while True:
-            data = ufp.read(4096)
-            if not data:
-                break
-            ofp.write(data)
-            
-        ufp.close()
-        ofp.close()
+        
         self.image = self.loadWebImage(self.imageURL)
         if self.badgeURL:
-            self.badge = self.loadWebImage(self.badgeURL)
+            self.badge = self.loadLocalImage(self.badgeURL)
         
         print self.image, self.badge.size
         
@@ -53,19 +44,41 @@ class BadgePaster(object):
         
         self.image.paste(resizedBadge, (0, self.image.size[1] - resizedBadge.size[1], 
                                         self.image.size[0], self.image.size[1]), resizedBadge)
-        self.image.save('./html/%s.jpg' % hash(self.imageURL))
-        self.image.show()
+        
+        imgName = '%s.jpg' % hash(self.imageURL)
+        self.image.save('./html/%s' % imgName, "JPEG", quality = 95)
+        return imgName
+        
         #x,y = 
         #_badge = self.badge.resize(min(self.badge))
         
+    def loadLocalImage(self, path):
+        try:
+            print path
+            fp = open(path)
+            
+            img = Image.open(path)
+            img.load()
+            return img
+            
+        except Exception, e:
+            logging.exception(e)
+            return None
+            
+        
+    
+    
     def loadWebImage(self, url):
        
         try:
+            print url
             ufp = urllib2.urlopen(url)
             ofp = open('/tmp/%s' % hash(url), 'w+')
             while True:
                 data = ufp.read(4096)
+                print len(data)
                 if not data:
+                    print "finished..."
                     break
                 ofp.write(data)
                 
