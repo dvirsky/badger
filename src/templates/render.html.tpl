@@ -15,7 +15,7 @@
 		     method: 'feed',
 		     name: 'גם אני תומך במהפכה',
 		     link: 'http://apps.facebook.com/julyrevolution/',
-		     picture: 'http://dviro.zapto.org/static/just_badge.png',
+		     picture: 'http://badger.servehttp.com/static/just_badge.png',
 		     caption: 'הוסיפו את האפליקציה עכשיו!',
 		     description: 'הוסיפו את אפליקציית התמיכה במחאת האוהלים, ושנו את תמונת הפרופיל שלכם http://apps.facebook.com/julyrevolution/'
 		   },
