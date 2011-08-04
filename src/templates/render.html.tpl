@@ -45,7 +45,20 @@
 </p>
 <p>
 	<a href="#" onclick="postToWall()">
-	<img src="/static/{{ imageURL }}" class="profile_img"/>
+		<img src="/static/{{ imageURL }}" class="profile_img"/>
 	</a>
+	<br/>
+	<div class="fbbluebox" style="width:250px">
+		<a href="#" onclick="postToWall()">
+		עבור לעמוד התמונה והפוך לתמונת הפרופיל
+		</a>
+	</div>
+	
+	<br/><br/>
+	<div class="fbbluebox" style="width:150px">
+		<a href="/select/">
+		חזרה לבחירת סמל אחר
+		</a>
+	</div>
 </p>
 </body>

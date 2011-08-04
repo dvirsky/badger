@@ -272,24 +272,3 @@ def parseValue(value):
         return ast.literal_eval('"%s"' % value)
     
     
-if __name__ == '__main__':
-    
-    
-    if len(sys.argv) > 1:
-        readConfig(settings, 'imgr', sys.argv[1])
-    
-    application = tornado.web.Application([
-                            (r"/login/", FacebookGraphLoginHandler),
-                            (r"/select/", SelectImageHandler),
-                            (r"/render/", RenderImageHandler),
-                            #(r"/compose_image/", Compose),
-                            
-                            (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": "./html"}),
-                            
-                            ],
-                            template_path = './templates',
-                            login_url = 'http://%s/login/' % settings.domain,
-                            cookie_secret = settings.cookie_secret)
-    
-    application.listen(9876)
-    tornado.ioloop.IOLoop.instance().start()
