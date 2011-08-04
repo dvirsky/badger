@@ -239,9 +239,9 @@ class RenderImageHandler(tornado.web.RequestHandler, tornado.auth.FacebookGraphM
             except Exception, e:
                 logging.exception(e)
                 
-        
-        self.write("Could not upload photo...")
-        self.finish()
+        self.redirect('/login/')
+        #self.write("Could not upload photo...")
+        #self.finish()
 
 def readConfig(settings, section, fileName):
     """
