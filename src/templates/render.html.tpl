@@ -20,12 +20,12 @@
 		     description: 'הוסיפו את אפליקציית התמיכה במחאת האוהלים, ושנו את תמונת הפרופיל שלכם http://apps.facebook.com/julyrevolution/'
 		   },
 		   function(response) {
-		      top.location.href = "{{ imageFbURL }}"
+		      top.location.href = "{{ imageFbURL }}" + "&makeprofile=1";
 		   }
 		 );
 		 }
 		 else {
-		 	top.location.href = "{{ imageFbURL }}"
+		 	top.location.href = "{{ imageFbURL }}" + "&makeprofile=1";
 		 }
 	  }
 	</script>

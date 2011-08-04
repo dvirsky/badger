@@ -231,7 +231,7 @@ class RenderImageHandler(tornado.web.RequestHandler, tornado.auth.FacebookGraphM
                 obj = json.loads(response.body)
                 self.render('render.html.tpl', imageURL = self.img, user = self.user, 
                             appId = settings.fb_appid, 
-                            imageFbURL = 'http://www.facebook.com/photo.php?fbid=%s&makeprofile=1' % obj['id'])
+                            imageFbURL = 'http://www.facebook.com/photo.php?fbid=%s' % obj['id'])
                 return
             except Exception, e:
                 logging.exception(e)
