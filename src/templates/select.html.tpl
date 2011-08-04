@@ -18,15 +18,21 @@
 	<b>לבחירה, לחץ על אחד הסמלים</b>
 </p>
 <p>
+	<h2>העם דורש צדק חברתי</h2>
+	<a href="/render/?b=2">
+		<img src="/static/just_badge.png" class="badge_select"/>
+	</a>
+</p>
+<p>
 	<h2>ב' זה בית</h2>
 	<a href="/render/?b=1">
 		<img src="/static/bet_badge.png" class="badge_select"/>
 	</a>
 </p>
 <p>
-	<h2>העם דורש צדק חברתי</h2>
-	<a href="/render/?b=2">
-		<img src="/static/just_badge.png" class="badge_select"/>
+	<h2>ביבילנד</h2>
+	<a href="/render/?b=3">
+		<img src="/static/bibi_badge.png" class="badge_select"/>
 	</a>
 </p>
 </body>

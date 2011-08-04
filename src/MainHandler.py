@@ -117,7 +117,8 @@ class RenderImageHandler(tornado.web.RequestHandler, tornado.auth.FacebookGraphM
     
     badges = {
               '1': './html/bet_badge.png',
-              '2': './html/just_badge.png'
+              '2': './html/just_badge.png',
+              '3': './html/bibi_badge.png'
               }
       
     def encode_multipart_formdata(self, fields, files):
