@@ -55,7 +55,7 @@ class FacebookGraphLoginHandler(tornado.web.RequestHandler, tornado.auth.Faceboo
           "redirect_uri": settings.canvas_page,
 
           "client_id": settings.fb_appid,
-          "scope": "publish_stream"
+          "scope": "publish_stream,offline_access"
         }
         
       print url_concat(self._OAUTH_AUTHORIZE_URL, args)
