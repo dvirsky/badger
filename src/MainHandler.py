@@ -35,7 +35,7 @@ class FacebookGraphLoginHandler(tornado.web.RequestHandler, tornado.auth.Faceboo
 
   @tornado.web.asynchronous
   def post(self):
-      
+      self.set_secure_cookie("user", '', expires_days = -1)
       if self.get_argument("code", False):
           #print "Got code: %s url: %s" % (self.get_argument("code", False), self._url_)
           self.get_authenticated_user(
