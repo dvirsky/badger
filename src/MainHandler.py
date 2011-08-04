@@ -71,7 +71,7 @@ class FacebookGraphLoginHandler(tornado.web.RequestHandler, tornado.auth.Faceboo
         print "Setting user: %s" % user
         self.set_secure_cookie("user", json.dumps(user), expires_days = 1)
         self.redirect('/select/')
-        
+        return
         #self.write('<img src="http://graph.facebook.com/%s/picture?type=large"/>' % user['id'])
     else:
         self.write("Sorry, we couldnot authenticate you...")
