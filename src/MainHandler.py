@@ -181,7 +181,7 @@ class RenderImageHandler(tornado.web.RequestHandler, tornado.auth.FacebookGraphM
                 
                 
                 
-                content_type, body = self.encode_multipart_formdata([('message', 'foo')],
+                content_type, body = self.encode_multipart_formdata([('message', 'משנים את תמונת הפרופיל ותומכים במהפכה')],
                                                        [('source', img, open('./html/%s'% img).read())])
                 
                 
