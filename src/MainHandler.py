@@ -201,7 +201,7 @@ class RenderImageHandler(tornado.web.RequestHandler, tornado.auth.FacebookGraphM
                                                          )
                 
                 client = tornado.httpclient.AsyncHTTPClient()
-                client.fetch(request, callback = self.async_callback(self.onImageUpload))
+                client.fetch(request, callback = self.onImageUpload)
                 logging.info("Uploading...")
                 return 
                                 
