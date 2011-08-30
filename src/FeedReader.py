@@ -268,9 +268,10 @@ def getFeeds():
     
     #/feed?access_token=
     
-def startServer(port):
+def startServer(port, doRefresh):
     logging.basicConfig(level = 0)#logging.info)
-    tornado.ioloop.IOLoop.instance().add_callback(getFeeds)
+    if doRefresh:
+        tornado.ioloop.IOLoop.instance().add_callback(getFeeds)
         
     application = tornado.web.Application([
                         (r"/", RootHandler)])
@@ -290,8 +291,8 @@ if __name__ == '__main__':
     workers = []
     for i in range(settings.num_workers):
         port = settings.base_port + 100 + i
-        print port
-        w = Process(target = startServer, args = [port,])
+        print i, port
+        w = Process(target = startServer, args = [port, i == 0])
         w.daemon = True
         w.start()
         workers.append(w)
