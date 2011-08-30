@@ -3,7 +3,14 @@
 import datetime, time, logging, json, functools
 import tornado.httpclient 
 import tornado.ioloop
+import tornado.web
+
 import redis
+import codecs
+
+from utils import parseValue, readConfig
+import settings
+from multiprocessing import Process
 
 class FeedMessage(object):
     
@@ -21,16 +28,17 @@ class FeedMessage(object):
         self.picture = None
         #time format: 2011-08-14T11:51:41+0000
         format = '%Y-%m-%dT%H:%M:%S+0000'
-        try:
-            
-            self.time = time.strptime(str(postTime), format)
-            self.timeString = postTime
-            
-        except Exception, e:
-            logging.exception(e)
-            self.time = datetime.datetime.now()
-            
-        
+        if postTime:
+            try:
+                
+                self.time = time.strptime(str(postTime), format)
+                self.timeString = postTime
+                
+            except Exception, e:
+                logging.exception(e)
+                self.time = datetime.datetime.now()
+                
+        extra = extra or {}
         self.picture = extra.get('picture', None)
         self.link = extra.get('link', None)
         if self.itype == 'status':
@@ -40,6 +48,8 @@ class FeedMessage(object):
             self.title = extra.get('name', '')
         elif self.itype == 'photo':
             self.text = extra.get('message', '')
+        elif self.itype == None:
+            pass
         else:
             raise ValueError("unrecoginzed type: %s" % self.itype)
         
@@ -54,14 +64,75 @@ class FeedMessage(object):
         
         return '%s:%s' % (self.itype, self.fbId)
     
+    def _valuesDict(self):
+        
+        return dict((x, getattr(self, x, '')) for x in ('fbId', 'itype', 'userId', 'userName',
+                                                                    'title', 'text', 'link', 'picture', 'timeString',
+                                                                    'feedId', 'feedName'))
+        
     def save(self, redisConn):
         
-        redisConn.hmset(self.key(), dict((x, getattr(self, x, None)) for x in ('fbId', 'itype', 'userId', 'userName',
-                                                                    'title', 'text', 'link', 'picture', 'timeString',
-                                                                    'feedId', 'feedName')))
+        
+        
+        redisConn.hmset(self.key(), self._valuesDict())
         
         redisConn.zadd('messageIndex', self.key(), time.mktime(self.time))
         
+    def setParams(self, dict_):
+        
+        self.__dict__.update(dict_)
+        
+    @staticmethod
+    def load(key, redisConn):
+        
+        try:
+            d = redisConn.hgetall(key)
+            if d:
+                i = FeedMessage(None, None, None, None, None, None, None, None)
+                i.setParams(d)
+                return i
+            
+        except Exception, e:
+            logging.exception("Could not load message: %s", e)
+            
+        return None
+                
+        
+        
+class AggregatedFeed(object):
+    
+    
+    def __init__(self):
+        
+        self._redis = redis.Redis()
+        self._items = []
+        self.first = 0
+        self.num = 0
+        self.limit = 0
+        self.max = 0
+        
+    def loadItems(self, first = 0, limit = 20):
+        
+        keys = self._redis.zrange('messageIndex', first, limit - 1, True)
+        
+        self.items = []
+        self.first = first
+        self.limit = limit
+        self.max = 0
+        for k in keys:
+            itm = FeedMessage.load(k, self._redis)
+            if itm:
+                self.items.append(itm)
+                
+        self.num = len(self.items)
+        self.max = self._redis.zcard('messageIndex')
+        
+    
+    def toJSON(self):
+        
+        d = {'first': self.first, 'limit': self.limit, 'num': self.num, 'max': self.max, 'items': [x._valuesDict() for x in self.items] }
+        return json.dumps(d, encoding = 'utf-8')
+    
        
 class FBFeedReader(object):
     
@@ -97,6 +168,7 @@ class FBFeedReader(object):
                 items = obj['data']
                 
                 for i in items:
+                    
                     if not i.has_key('to'):
                         print json.dumps(i, indent = 4)
                     try:
@@ -133,7 +205,8 @@ class FeedCollector(object):
             r = FBFeedReader(accessToken)
             r.getItems(f, self.onFeedFinish)
             
-        #tornado.ioloop.IOLoop.instance().add_timeout(30, self.onTimeout)
+        
+        self._timeout = tornado.ioloop.IOLoop.instance().add_timeout(time.time() + 30, self.onTimeout)
         
     def onFeedFinish(self, items):
         
@@ -153,32 +226,82 @@ class FeedCollector(object):
         if self.isWorking:
             print "Timeout! got %s/%s feeds only!"
             tornado.ioloop.IOLoop.instance().add_callback(self.onAllFinished)
+            
         
     def onAllFinished(self):
         
         self.isWorking = False
+        if self._timeout:
+            logging.debug("Removing timeout %s" % self._timeout)
+            tornado.ioloop.IOLoop.instance().remove_timeout(self._timeout)
         if self.collectedItems:
             self.collectedItems.sort(lambda x,y: cmp(y.time, x.time))
         
-        r = redis.Redis()
-        p = r.pipeline()
-        for item in self.collectedItems:
-            item.save(p)
-            #print item.title or item.text or item.link
-            #print "\n--------------------------------\n\n"
+        try:
+            r = redis.Redis()
+            p = r.pipeline()
+            for item in self.collectedItems:
+                item.save(p)
+                #print item.title or item.text or item.link
+                #print "\n--------------------------------\n\n"
             
-        p.execute()
+            p.execute()
+        except Exception, e:
+            logging.exception("Could not save feed: %s", e)
+
+            
+        tornado.ioloop.IOLoop.instance().add_timeout(time.time() + settings.refresh_interval, getFeeds)
             
     
+class RootHandler(tornado.web.RequestHandler):
+    
+    def get(self):
+        feed = AggregatedFeed()
+        feed.loadItems(int(self.get_argument('f', 0) or 0), int(self.get_argument('l', 20) or 0))
+        self.write(feed.toJSON())
+        
     
 def getFeeds():
+    print("Get feeds called!")
     
-    r = FeedCollector([169350816471243, 156008021140159], '')
+    r = FeedCollector(settings.feed_ids, settings.access_token)
     
     #/feed?access_token=
-if __name__ == '__main__':
     
-    logging.basicConfig(level = 0)
+def startServer(port):
+    logging.basicConfig(level = 0)#logging.info)
     tornado.ioloop.IOLoop.instance().add_callback(getFeeds)
+        
+    application = tornado.web.Application([
+                        (r"/", RootHandler)])
+    application.listen(port)
+        
     
     tornado.ioloop.IOLoop.instance().start()
+    
+    
+import sys
+if __name__ == '__main__':
+    
+    
+    if len(sys.argv) > 1:
+        readConfig(settings, 'fbfeedr', sys.argv[1])
+    
+    workers = []
+    for i in range(settings.num_workers):
+        port = settings.base_port + 100 + i
+        print port
+        w = Process(target = startServer, args = [port,])
+        w.daemon = True
+        w.start()
+        workers.append(w)
+
+    try:
+        for w in workers:
+            w.join()
+    except:
+        pass
+    
+    
+    
+    
