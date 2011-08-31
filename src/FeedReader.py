@@ -1,3 +1,4 @@
+#!/bin/python
 ## Generic class to read the feed of a facebook entity (event, user, group, etc):
 
 import datetime, time, logging, json, functools
@@ -131,7 +132,7 @@ class AggregatedFeed(object):
     def toJSON(self):
         
         d = {'first': self.first, 'limit': self.limit, 'num': self.num, 'max': self.max, 'items': [x._valuesDict() for x in self.items] }
-        return json.dumps(d, encoding = 'utf-8')
+        return json.dumps(d, encoding = 'utf-8', ensure_ascii=False)
     
        
 class FBFeedReader(object):
@@ -288,20 +289,25 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         readConfig(settings, 'fbfeedr', sys.argv[1])
     
-    workers = []
-    for i in range(settings.num_workers):
-        port = settings.base_port + 100 + i
-        print i, port
-        w = Process(target = startServer, args = [port, i == 0])
-        w.daemon = True
-        w.start()
-        workers.append(w)
-
-    try:
-        for w in workers:
-            w.join()
-    except:
-        pass
+    if not __debug__:
+        workers = []
+        for i in range(settings.num_workers):
+            port = settings.base_port + 100 + i
+            print i, port
+            w = Process(target = startServer, args = [port, i == 0])
+            w.daemon = True
+            w.start()
+            workers.append(w)
+    
+        try:
+            for w in workers:
+                w.join()
+        except:
+            pass
+    else:
+        startServer(8200, True)
+        
+        
     
     
     
